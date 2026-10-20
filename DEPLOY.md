@@ -23,23 +23,23 @@ Open a **Bash console** (Consoles tab → "Bash").
 
 **If the project is on GitHub:**
 ```bash
-git clone https://github.com/granitechief88/hdsc.git ~/click_n_glide
+git clone https://github.com/granitechief88/hdsc.git ~/hdsc
 ```
 
 **Otherwise, upload a zip:** on your machine, zip the project *without* `.venv`
 and `instance` (both are rebuilt on the server):
 ```bash
 # run locally, from the project's parent directory
-zip -r click_n_glide.zip click_n_glide -x '*/.venv/*' '*/instance/*' '*/__pycache__/*'
+zip -r hdsc.zip hdsc -x '*/.venv/*' '*/instance/*' '*/__pycache__/*'
 ```
 Then **Files tab → Upload** the zip, and in the Bash console:
 ```bash
-cd ~ && unzip click_n_glide.zip
+cd ~ && unzip hdsc.zip
 ```
 
 ## 3. Create a virtualenv and install dependencies
 ```bash
-cd ~/click_n_glide
+cd ~/hdsc
 python3.10 -m venv .venv
 .venv/bin/pip install --upgrade pip
 .venv/bin/pip install -r requirements.txt
@@ -62,9 +62,9 @@ On the **Web tab**, set:
 
 | Setting | Value |
 |---|---|
-| **Source code** | `/home/YOURNAME/click_n_glide` |
-| **Working directory** | `/home/YOURNAME/click_n_glide` |
-| **Virtualenv** | `/home/YOURNAME/click_n_glide/.venv` |
+| **Source code** | `/home/YOURNAME/hdsc` |
+| **Working directory** | `/home/YOURNAME/hdsc` |
+| **Virtualenv** | `/home/YOURNAME/hdsc/.venv` |
 
 Then click the **WSGI configuration file** link (e.g.
 `/var/www/YOURNAME_pythonanywhere_com_wsgi.py`), **delete everything in it**, and
@@ -73,7 +73,7 @@ replace with:
 ```python
 import os, sys
 
-project = "/home/YOURNAME/click_n_glide"
+project = "/home/YOURNAME/hdsc"
 if project not in sys.path:
     sys.path.insert(0, project)
 
@@ -89,7 +89,7 @@ On the **Web tab → Static files**, add a mapping:
 
 | URL | Directory |
 |---|---|
-| `/static/` | `/home/YOURNAME/click_n_glide/app/static` |
+| `/static/` | `/home/YOURNAME/hdsc/app/static` |
 
 (Uploaded images are *not* static — they're served through a login-gated route, so
 don't map `/uploads/`.)
@@ -113,7 +113,7 @@ your own from **Admin → Add member**.
 
 **Reset the demo data** (wipe sign-ups/uploads back to the seeded state):
 ```bash
-cd ~/click_n_glide
+cd ~/hdsc
 rm -f instance/soar.db
 rm -f instance/uploads/*
 # then click Reload on the Web tab — first visit re-seeds
@@ -123,7 +123,7 @@ Or, equivalently: `.venv/bin/flask --app "app:create_app" init-demo`
 **Optional — daily reminder emails.** The free tier includes one daily scheduled
 task. **Tasks tab → add a daily task** with this command:
 ```bash
-cd /home/YOURNAME/click_n_glide && .venv/bin/flask --app "app:create_app" send-reminders
+cd /home/YOURNAME/hdsc && .venv/bin/flask --app "app:create_app" send-reminders
 ```
 (Reminders are queued into the in-app outbox, viewable at **Admin → Email outbox**.
 To actually *send* mail you'd wire `app/scheduling.py:queue_email` to an SMTP
@@ -137,7 +137,7 @@ provider — see "Sending real email" below.)
 
 ## Updating the deployed app later
 ```bash
-cd ~/click_n_glide
+cd ~/hdsc
 git pull                      # or re-upload changed files
 .venv/bin/pip install -r requirements.txt   # if deps changed
 ```
