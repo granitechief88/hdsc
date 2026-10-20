@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Activate account · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="panel">
+    <div class="phead">Welcome to Soar Scheduler — Account Activation</div>
+    <div class="pbody">
+      <p>Hello {{ member.first_name }}, your club has created an account for you.</p>
+      <p><b>Name:</b> {{ member.display_name }}<br>
+         <b>Username (email):</b> {{ member.email }}<br>
+         <b>Your roles:</b>
+         {% for r in member.roles %}<span class="pill">{{ r.name }}</span>{% else %}<span class="muted">none yet</span>{% endfor %}
+      </p>
+      <p class="muted" style="font-size:13px;">If anything is incorrect, contact your club administrator.</p>
+      <form method="post">
+        <label>Choose a password (minimum 6 characters)</label>
+        <input type="password" name="password" required>
+        <label>Confirm your password</label>
+        <input type="password" name="confirm" required>
+        <div style="margin-top:16px;"><button class="btn" type="submit">Activate my account</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

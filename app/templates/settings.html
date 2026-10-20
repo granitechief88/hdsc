@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Settings · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:560px;margin:0 auto;">
+  <h1>Your settings</h1>
+  <div class="panel"><div class="pbody">
+    <form method="post">
+      <label>First name</label>
+      <input type="text" name="first_name" value="{{ current_user.first_name }}">
+      <label>Last name</label>
+      <input type="text" name="last_name" value="{{ current_user.last_name }}">
+      <p class="muted" style="font-size:13px;margin-top:12px;">
+        Email: <b>{{ current_user.email }}</b> ·
+        Member #: <b>{{ current_user.membership_number or '—' }}</b><br>
+        Roles: {% for r in current_user.roles %}<span class="pill">{{ r.name }}</span>{% endfor %}
+        <br><span style="font-size:12px;">(contact an admin to change your email or roles)</span>
+      </p>
+      <label style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" name="wants_reminders" style="width:auto;" {{ 'checked' if current_user.wants_reminders }}>
+        Email me a reminder 2 days before days I'm signed up for
+      </label>
+      <label>New password (leave blank to keep current)</label>
+      <input type="password" name="password">
+      <div style="margin-top:16px;"><button class="btn" type="submit">Save settings</button></div>
+    </form>
+  </div></div>
+</main></div>
+{% endblock %}

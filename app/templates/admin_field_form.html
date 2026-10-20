@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if field else 'Add' }} field · Soar Scheduler{% endblock %}
+
+{% set cur_label = (form.get('label') if form else (field.label if field else '')) or '' %}
+{% set cur_group = (form.get('group_key') if form else (field.group_key if field else '')) or '' %}
+{% set cur_kind  = (form.get('kind') if form else (field.kind if field else 'LIST')) %}
+{% set cur_col   = (form.get('column') if form else (field.column if field else 1)) %}
+{% set cur_pos   = (form.get('position') if form else (field.position if field is not none and field else '')) %}
+{% set cur_max   = (form.get('max_slots') if form else (field.max_slots if field else none)) %}
+{% set cur_offer = (form.get('default_offer') if form else (field.default_offer if field else 1)) %}
+
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:620px;margin:0 auto;">
+  <h1>{{ 'Edit field' if field else 'Add field to the day board' }}</h1>
+  <div class="panel"><div class="pbody">
+    <form method="post">
+      <label>Label (shown on the board)</label>
+      <input type="text" name="label" value="{{ cur_label }}" placeholder="e.g. Reserve tug driver" required>
+
+      <label>Type</label>
+      <select name="kind">
+        {% for k in kinds %}<option value="{{ k }}" {{ 'selected' if k == cur_kind }}>{{ k }}</option>{% endfor %}
+      </select>
+      <p class="muted" style="font-size:12.5px;margin-top:4px;">
+        <b>LIST</b> — a simple list (optionally capped), e.g. Winch Driver. ·
+        <b>PROVIDER</b> — instructors who open student slots. ·
+        <b>CONSUMER</b> — students filling those slots. ·
+        <b>WAITING</b> — overflow queue.
+        PROVIDER/CONSUMER/WAITING fields are linked by sharing the same <i>group</i> name.
+      </p>
+
+      <label>Group name (required for PROVIDER / CONSUMER / WAITING)</label>
+      <input type="text" name="group_key" value="{{ cur_group }}" placeholder="e.g. booked, flying, fullday">
+
+      <label>Shows on</label>
+      <div style="display:flex;gap:16px;">
+        {% for dt in ['weekday', 'weekend'] %}
+          {% set dchecked = (form and dt in form.getlist('day_types'))
+             or (not form and field and dt in field.day_types.split(','))
+             or (not form and not field) %}
+          <label style="display:flex;align-items:center;gap:6px;margin:0;">
+            <input type="checkbox" name="day_types" value="{{ dt }}" style="width:auto;" {{ 'checked' if dchecked }}>
+            {{ dt|capitalize }}
+          </label>
+        {% endfor %}
+      </div>
+
+      <label>Allowed roles (none selected = everyone)</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        {% for r in roles %}
+          {% set rchecked = (form and (r.id|string) in form.getlist('allowed_roles'))
+             or (not form and field and r.name in field.allowed_role_list()) %}
+          <label style="display:flex;align-items:center;gap:6px;margin:0;">
+            <input type="checkbox" name="allowed_roles" value="{{ r.id }}" style="width:auto;" {{ 'checked' if rchecked }}>
+            {{ r.name }}
+          </label>
+        {% endfor %}
+      </div>
+
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;">
+          <label>Column (1–3)</label>
+          <input type="number" name="column" min="1" max="3" value="{{ cur_col }}">
+        </div>
+        <div style="flex:1;">
+          <label>Position in column</label>
+          <input type="number" name="position" min="0" value="{{ cur_pos }}" placeholder="auto (end)">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;">
+          <label>Max slots (blank = unlimited)</label>
+          <input type="number" name="max_slots" min="1" value="{{ cur_max if cur_max is not none else '' }}"
+                 placeholder="LIST cap, or max instructors for PROVIDER">
+        </div>
+        <div style="flex:1;">
+          <label>Default student count (PROVIDER)</label>
+          <input type="number" name="default_offer" min="1" value="{{ cur_offer }}">
+        </div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <button class="btn" type="submit">{{ 'Save changes' if field else 'Add field' }}</button>
+        <a class="btn secondary" href="{{ url_for('admin.fields') }}">Cancel</a>
+      </div>
+    </form>
+    {% if field %}
+    <p class="muted" style="font-size:12.5px;margin-top:12px;">Internal key: <code>{{ field.key }}</code> (fixed, so existing sign-ups stay linked).</p>
+    {% endif %}
+  </div></div>
+</main></div>
+{% endblock %}

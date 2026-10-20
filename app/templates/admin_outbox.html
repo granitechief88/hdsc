@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Email outbox · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main">
+  <div class="page-head">
+    <h1>Email outbox</h1>
+    <div style="display:flex;gap:8px;">
+      <form method="post" action="{{ url_for('admin.run_reminders') }}">
+        <button class="btn secondary" type="submit">Run 2-day reminders now</button>
+      </form>
+      <a href="{{ url_for('admin.home') }}">‹ Back</a>
+    </div>
+  </div>
+  <p class="muted" style="font-size:13px;">Automatic reminders and staffing alerts, plus internal messages,
+    are recorded here instead of being sent (no SMTP server is wired up in this build).</p>
+  <div class="panel">
+    <table class="data">
+      <tr><th>When</th><th>Kind</th><th>To</th><th>Subject</th></tr>
+      {% for e in emails %}
+      <tr>
+        <td class="muted" style="white-space:nowrap;">{{ e.created_at.strftime('%d %b %H:%M') }}</td>
+        <td><span class="pill">{{ e.kind }}</span></td>
+        <td>{{ e.to_email }}</td>
+        <td>{{ e.subject }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="muted">No emails queued yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</main></div>
+{% endblock %}

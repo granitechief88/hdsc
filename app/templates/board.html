@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}{{ day.strftime('%A %d %B') }} · Soar Scheduler{% endblock %}
+
+{% macro signup_row(s, field) %}
+  <div class="signup-row">
+    <span class="who">{{ s.member.display_name }}</span>
+    {% if field.kind == 'PROVIDER' and s.offered %}<span class="offered">({{ s.offered }} slot{{ 's' if s.offered != 1 }})</span>{% endif %}
+    {% if s.member_id == current_user.id or current_user.is_admin %}
+      <form class="inline-form" method="post" action="{{ url_for('board.remove') }}"
+            onsubmit="return confirm('Remove this sign-up?');">
+        <input type="hidden" name="signup_id" value="{{ s.id }}">
+        <input type="hidden" name="date" value="{{ day.isoformat() }}">
+        <button class="iconbtn x" title="Remove">✕</button>
+      </form>
+      <button type="button" class="iconbtn" title="Comment"
+              onclick="document.getElementById('cmt{{ s.id }}').style.display='flex';">✎</button>
+    {% endif %}
+    {% if s.comment %}<span class="cmt">“{{ s.comment }}”</span>{% endif %}
+  </div>
+  {% if s.member_id == current_user.id or current_user.is_admin %}
+    <form id="cmt{{ s.id }}" class="signup-form" style="display:none;"
+          method="post" action="{{ url_for('board.comment') }}">
+      <input type="hidden" name="signup_id" value="{{ s.id }}">
+      <input type="hidden" name="date" value="{{ day.isoformat() }}">
+      <input type="text" name="comment" value="{{ s.comment or '' }}" placeholder="Add a comment (e.g. morning only)">
+      <button class="btn sm" type="submit">Save</button>
+    </form>
+  {% endif %}
+{% endmacro %}
+
+{% macro field_card(card) %}
+  {% set f = card.field %}
+  <div class="field {{ 'waiting' if f.kind == 'WAITING' }}">
+    <div class="fhead"><span>{{ f.label }}</span><span class="occ">{{ card.occupancy }}</span></div>
+    <div class="fbody">
+      {% for s in card.signups %}{{ signup_row(s, f) }}{% endfor %}
+      {% if not card.signups and f.kind != 'WAITING' %}<div class="muted" style="font-size:12.5px;">No sign-ups yet.</div>{% endif %}
+
+      {% if card.can_sign %}
+        <form class="signup-form" method="post" action="{{ url_for('board.signup') }}">
+          <input type="hidden" name="field_key" value="{{ f.key }}">
+          <input type="hidden" name="date" value="{{ day.isoformat() }}">
+          {% if f.kind == 'PROVIDER' %}
+            <span style="font-size:12.5px;color:var(--muted);">Students:</span>
+            <select name="offered" style="width:auto;">
+              {% for n in card.offer_options %}<option value="{{ n }}" {{ 'selected' if n == f.default_offer }}>{{ n }}</option>{% endfor %}
+            </select>
+          {% endif %}
+          <input type="text" name="comment" placeholder="Comment (optional)">
+          <button class="btn sm" type="submit">Sign up</button>
+        </form>
+      {% elif card.full %}
+        <div class="full-note">Full.</div>
+      {% elif card.already_signed and f.kind != 'WAITING' %}
+        <div class="no-perm">You're signed up in this group.</div>
+      {% elif f.kind != 'WAITING' and not f.member_allowed(current_user) %}
+        <div class="no-perm">Your roles don't cover this.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% block body %}
+<div class="wrap">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="pbody">
+        <b>{{ current_user.display_name }}</b><br>
+        <span class="muted" style="font-size:13px;">
+          {% for r in current_user.roles %}{{ r.name }}{{ ', ' if not loop.last }}{% endfor %}
+        </span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="pbody">
+        <div class="cal-nav">
+          <b>{{ cal_month_name }}</b>
+          <span><a href="{{ url_for('board.day', date=today.isoformat()) }}">Today</a></span>
+        </div>
+        <table class="calendar">
+          <tr><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th></tr>
+          {% for week in cal_weeks %}
+          <tr>
+            {% for dnum in week %}
+              {% if dnum == 0 %}
+                <td></td>
+              {% else %}
+                {% set cd = day.replace(day=dnum) %}
+                {% set is_weekend = loop.index0 >= 5 %}
+                <td class="{{ 'weekend' if is_weekend }} {{ 'today' if cd == today }} {{ 'selected' if cd == day }}">
+                  <a href="{{ url_for('board.day', date=cd.isoformat()) }}">{{ dnum }}</a>
+                </td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead">Upcoming events <a href="{{ url_for('events.new_event') }}" title="New event">+</a></div>
+      <div class="pbody">
+        {% for e in upcoming %}
+          <div style="font-size:13.5px;margin-bottom:6px;">
+            <b>{{ e.day.strftime('%a %d %b') }}</b> — <a href="{{ url_for('events.list_events') }}">{{ e.title }}</a>
+          </div>
+        {% else %}
+          <div class="muted" style="font-size:13px;">No upcoming events.
+            <a href="{{ url_for('events.new_event') }}">Create one</a>.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead">Mailbox <a href="{{ url_for('messages.compose') }}" title="New message">+</a></div>
+      <div class="pbody">
+        <a href="{{ url_for('messages.inbox') }}">Inbox{% if unread_messages %} ({{ unread_messages }} unread){% endif %}</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main board -->
+  <main class="main">
+    <div class="day-title">
+      {{ day.strftime('%A %d %B, %Y') }}
+      {% if day_type == 'weekend' %}<span class="tag-weekend">· weekend</span>{% endif %}
+    </div>
+    <div class="day-nav">
+      <a href="{{ url_for('board.day', date=prev_day.isoformat()) }}">‹ Previous day</a>
+      <a href="{{ url_for('board.day', date=next_day.isoformat()) }}">Next day ›</a>
+    </div>
+
+    <div class="board-cols">
+      {% for col in [1, 2, 3] %}
+        <div>
+          {% for card in columns[col] %}{{ field_card(card) }}{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Day forum -->
+    <div class="panel" style="margin-top:4px;">
+      <div class="phead">Forum for {{ day.strftime('%A %d %B') }}</div>
+      <div class="pbody">
+        {% for p in forum %}
+          <div class="forum-post">
+            {% if p.body %}<div>{{ p.body }}</div>{% endif %}
+            {% if p.attachments %}
+            <div class="attachments">
+              {% for a in p.attachments %}
+                <a href="{{ url_for('board.uploaded_file', name=a.filename) }}" target="_blank" title="{{ a.original_name }}">
+                  <img class="forum-img" src="{{ url_for('board.uploaded_file', name=a.filename) }}" alt="{{ a.original_name }}">
+                </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="meta">
+              {{ p.member.display_name }} · {{ p.created_at.strftime('%d %b %H:%M') }}
+              {% if p.member_id == current_user.id or current_user.is_admin %}
+                · <form class="inline-form" method="post" action="{{ url_for('board.forum_delete', post_id=p.id) }}"
+                        onsubmit="return confirm('Delete this post?');">
+                    <button class="iconbtn" style="color:var(--red);font-size:12px;">delete</button>
+                  </form>
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="muted" style="font-size:13px;">No messages yet for this day.</div>
+        {% endfor %}
+        <form method="post" action="{{ url_for('board.forum_post') }}"
+              enctype="multipart/form-data" style="margin-top:10px;">
+          <input type="hidden" name="date" value="{{ day.isoformat() }}">
+          <textarea name="body" rows="2" placeholder="Share weather, briefing times, maintenance notes…"></textarea>
+          <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="file" name="images" accept="image/*" multiple style="width:auto;font-size:13px;">
+            <button class="btn sm" type="submit">Post</button>
+          </div>
+          <div class="muted" style="font-size:12px;margin-top:4px;">
+            Attach MM5, RASP/soaring-forecast or other images (PNG, JPG, GIF, WebP · up to 12&nbsp;MB each).
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

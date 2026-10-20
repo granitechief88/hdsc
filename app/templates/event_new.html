@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}New event · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:560px;margin:0 auto;">
+  <h1>Create an event</h1>
+  <div class="panel"><div class="pbody">
+    <form method="post">
+      <label>Title</label>
+      <input type="text" name="title" placeholder="e.g. Theory lesson, maintenance day, club dinner" required>
+      <label>Date</label>
+      <input type="date" name="day" value="{{ default_day }}" required>
+      <label>Description</label>
+      <textarea name="description" rows="3" placeholder="Details, what to bring, etc."></textarea>
+      <label>Capacity (optional — leave blank for unlimited)</label>
+      <input type="number" name="capacity" min="1" placeholder="e.g. 12">
+      <div style="margin-top:16px;">
+        <button class="btn" type="submit">Create event</button>
+        <a class="btn secondary" href="{{ url_for('events.list_events') }}">Cancel</a>
+      </div>
+    </form>
+  </div></div>
+</main></div>
+{% endblock %}

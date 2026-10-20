@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Mailbox · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main">
+  <div class="page-head">
+    <h1>Mailbox</h1>
+    <a class="btn" href="{{ url_for('messages.compose') }}">+ New message</a>
+  </div>
+  <div class="panel"><div class="pbody">
+    {% for m in msgs %}
+      <div class="mailrow {{ 'unread' if not m.read }}">
+        <a href="{{ url_for('messages.view', msg_id=m.id) }}">{{ m.subject }}</a>
+        <div class="muted" style="font-size:12.5px;">
+          from {{ m.sender.display_name }}
+          {% if m.audience %}· to {{ m.audience }}{% endif %}
+          · {{ m.created_at.strftime('%d %b %H:%M') }}
+        </div>
+      </div>
+    {% else %}
+      <div class="muted">No messages.</div>
+    {% endfor %}
+  </div></div>
+</main></div>
+{% endblock %}

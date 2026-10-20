@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Events · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main">
+  <div class="page-head">
+    <h1>Upcoming events</h1>
+    <a class="btn" href="{{ url_for('events.new_event') }}">+ New event</a>
+  </div>
+
+  {% for e in events %}
+    {% set signed = e.signups | selectattr('member_id', 'equalto', current_user.id) | list | length > 0 %}
+    <div class="panel"><div class="pbody">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <b style="font-size:16px;">{{ e.title }}</b>
+          <div class="muted" style="font-size:13px;">{{ e.day.strftime('%A %d %B %Y') }}
+            · created by {{ e.created_by.first_name if e.created_by }}</div>
+          {% if e.description %}<p style="margin:8px 0 0;">{{ e.description }}</p>{% endif %}
+          <div style="margin-top:8px;font-size:13px;">
+            <b>{{ e.signups|length }}{% if e.capacity %}/{{ e.capacity }}{% endif %}</b> signed up:
+            {% for su in e.signups %}<span class="pill">{{ su.member.first_name }}</span>{% else %}<span class="muted">nobody yet</span>{% endfor %}
+          </div>
+        </div>
+        <div style="flex-shrink:0;">
+          {% if signed %}
+            <form method="post" action="{{ url_for('events.leave', event_id=e.id) }}">
+              <button class="btn secondary sm" type="submit">Leave</button>
+            </form>
+          {% else %}
+            <form method="post" action="{{ url_for('events.signup', event_id=e.id) }}">
+              <button class="btn sm" type="submit">Sign up</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div></div>
+  {% else %}
+    <div class="panel"><div class="pbody muted">No upcoming events. Create the first one!</div></div>
+  {% endfor %}
+</main></div>
+{% endblock %}

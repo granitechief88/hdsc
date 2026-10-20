@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}New message · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:600px;margin:0 auto;">
+  <h1>New message</h1>
+  <div class="panel"><div class="pbody">
+    <form method="post">
+      <label>To</label>
+      <select name="target">
+        <optgroup label="Groups">
+          {% for a in audiences %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+        </optgroup>
+        <optgroup label="Individual members">
+          {% for m in members %}<option value="member:{{ m.id }}">{{ m.display_name }}</option>{% endfor %}
+        </optgroup>
+      </select>
+      <label>Subject</label>
+      <input type="text" name="subject" placeholder="Subject">
+      <label>Message</label>
+      <textarea name="body" rows="6" placeholder="Your message…" required></textarea>
+      <div style="margin-top:16px;">
+        <button class="btn" type="submit">Send</button>
+        <a class="btn secondary" href="{{ url_for('messages.inbox') }}">Cancel</a>
+      </div>
+    </form>
+    <p class="muted" style="font-size:12.5px;margin-top:12px;">
+      Messages appear in recipients' mailboxes and are also recorded in the email outbox.
+    </p>
+  </div></div>
+</main></div>
+{% endblock %}

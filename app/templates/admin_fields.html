@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Sign-up fields · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main">
+  <div class="page-head">
+    <h1>Sign-up fields</h1>
+    <div style="display:flex;gap:8px;">
+      <a href="{{ url_for('admin.home') }}">‹ Back to members</a>
+      <a class="btn" href="{{ url_for('admin.new_field') }}">+ Add field</a>
+    </div>
+  </div>
+  <p class="muted" style="font-size:13px;">These are the columns shown on the day board. Each field belongs to a column,
+    shows on weekdays and/or weekends, and can be limited to certain roles. Provider fields
+    (instructors) open slots for the consumer field in the same group; overflow goes to the waiting list.
+    Position sets the order within a column (lower = higher up).</p>
+  <div class="panel">
+    <table class="data">
+      <tr><th>Label</th><th>Kind</th><th>Group</th><th>Shows on</th><th>Roles</th><th>Col</th><th>Pos</th><th>Cap</th><th></th></tr>
+      {% for f in fields %}
+      <tr>
+        <td>{{ f.label }}</td>
+        <td><span class="pill">{{ f.kind }}</span></td>
+        <td>{{ f.group_key or '—' }}</td>
+        <td>{{ f.day_types }}</td>
+        <td>{% for r in f.allowed_role_list() %}<span class="pill">{{ r }}</span>{% else %}<span class="muted">everyone</span>{% endfor %}</td>
+        <td>{{ f.column }}</td>
+        <td>{{ f.position }}</td>
+        <td>{{ f.max_slots if f.max_slots else '∞' }}</td>
+        <td style="white-space:nowrap;">
+          <a href="{{ url_for('admin.edit_field', field_id=f.id) }}">Edit</a>
+          · <form class="inline-form" method="post" action="{{ url_for('admin.delete_field', field_id=f.id) }}"
+                  onsubmit="return confirm('Remove “{{ f.label }}” and any sign-ups recorded against it?');">
+              <button class="iconbtn" style="color:var(--red);">Delete</button>
+            </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</main></div>
+{% endblock %}

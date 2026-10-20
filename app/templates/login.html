@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Log in · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="panel">
+    <div class="phead">Log in to your club</div>
+    <div class="pbody">
+      <form method="post">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" autofocus required>
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Your password" required>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+          <input type="checkbox" name="stay" style="width:auto;" checked> Stay connected
+        </label>
+        <div style="margin-top:16px;"><button class="btn" type="submit">Log in</button></div>
+      </form>
+    </div>
+  </div>
+  <p class="muted" style="text-align:center;font-size:13px;">
+    Demo logins (password <b>glide1234</b>): alex@soardemo.club (admin),
+    ivy@soardemo.club (instructor), sam@soardemo.club (student).
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Roles · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:560px;margin:0 auto;">
+  <div class="page-head"><h1>Roles</h1><a href="{{ url_for('admin.home') }}">‹ Back to members</a></div>
+  <div class="panel"><div class="pbody">
+    <table class="data">
+      {% for r in roles %}
+      <tr>
+        <td>{{ r.name }} <span class="muted">({{ r.members|length }} members)</span></td>
+        <td style="text-align:right;">
+          <form class="inline-form" method="post" action="{{ url_for('admin.delete_role', role_id=r.id) }}"
+                onsubmit="return confirm('Delete role {{ r.name }}?');">
+            <button class="iconbtn" style="color:var(--red);">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <form method="post" style="margin-top:14px;display:flex;gap:8px;">
+      <input type="text" name="name" placeholder="New role name" required>
+      <button class="btn" type="submit">Add</button>
+    </form>
+  </div></div>
+</main></div>
+{% endblock %}

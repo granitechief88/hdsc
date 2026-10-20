@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Soar Scheduler{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">Soar <span class="glide">Scheduler</span></span>
+    {% if current_user.is_authenticated %}
+    <nav>
+      <a href="{{ url_for('board.day') }}" class="{{ 'active' if request.blueprint == 'board' }}">Day board</a>
+      <a href="{{ url_for('events.list_events') }}" class="{{ 'active' if request.blueprint == 'events' }}">Events</a>
+      <a href="{{ url_for('messages.inbox') }}" class="{{ 'active' if request.blueprint == 'messages' }}">Mailbox{% if unread_messages %}<span class="badge">{{ unread_messages }}</span>{% endif %}</a>
+      {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.home') }}" class="{{ 'active' if request.blueprint == 'admin' }}">Admin</a>
+      {% endif %}
+      <a href="{{ url_for('auth.settings') }}">{{ current_user.first_name }}</a>
+      <a href="{{ url_for('auth.logout') }}">Log out</a>
+    </nav>
+    {% endif %}
+  </header>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="max-width:1280px;margin:10px auto 0;padding:0 18px;">
+        {% for cat, msg in messages %}
+          <div class="flash {{ cat }}">{{ msg }}</div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>

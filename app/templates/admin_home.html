@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Admin · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main">
+  <div class="page-head">
+    <h1>Members</h1>
+    <div style="display:flex;gap:8px;">
+      <a class="btn secondary" href="{{ url_for('admin.roles') }}">Roles</a>
+      <a class="btn secondary" href="{{ url_for('admin.fields') }}">Sign-up fields</a>
+      <a class="btn secondary" href="{{ url_for('admin.outbox') }}">Email outbox</a>
+      <a class="btn" href="{{ url_for('admin.new_member') }}">+ Add member</a>
+    </div>
+  </div>
+  <div class="panel">
+    <table class="data">
+      <tr><th>Name</th><th>Email</th><th>Member #</th><th>Roles</th><th>Status</th><th></th></tr>
+      {% for m in members %}
+      <tr>
+        <td>{{ m.first_name }} {{ m.last_name }}{% if m.is_admin %} <span class="pill">admin</span>{% endif %}</td>
+        <td>{{ m.email }}</td>
+        <td>{{ m.membership_number or '—' }}</td>
+        <td>{% for r in m.roles %}<span class="pill">{{ r.name }}</span>{% endfor %}</td>
+        <td>{% if m.activated %}<span style="color:var(--green);">active</span>{% else %}<span class="muted">pending</span>{% endif %}</td>
+        <td style="white-space:nowrap;">
+          <a href="{{ url_for('admin.edit_member', member_id=m.id) }}">Edit</a>
+          {% if m.id != current_user.id %}
+          · <form class="inline-form" method="post" action="{{ url_for('admin.delete_member', member_id=m.id) }}"
+                  onsubmit="return confirm('Remove {{ m.first_name }} {{ m.last_name }}?');">
+              <button class="iconbtn" style="color:var(--red);">Delete</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</main></div>
+{% endblock %}

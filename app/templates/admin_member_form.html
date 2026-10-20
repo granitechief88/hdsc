@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if member else 'Add' }} member · Soar Scheduler{% endblock %}
+{% block body %}
+<div class="wrap"><main class="main" style="max-width:560px;margin:0 auto;">
+  <h1>{{ 'Edit member' if member else 'Add member' }}</h1>
+  <div class="panel"><div class="pbody">
+    <form method="post">
+      <label>First name</label>
+      <input type="text" name="first_name" value="{{ member.first_name if member }}" required>
+      <label>Last name</label>
+      <input type="text" name="last_name" value="{{ member.last_name if member }}" required>
+      <label>Membership number</label>
+      <input type="text" name="membership_number" value="{{ member.membership_number if member }}">
+      {% if not member %}
+      <label>Email (used to log in)</label>
+      <input type="email" name="email" required>
+      {% else %}
+      <p class="muted" style="font-size:13px;">Email: <b>{{ member.email }}</b></p>
+      {% endif %}
+      <label>Roles</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        {% for r in roles %}
+          <label style="display:flex;align-items:center;gap:6px;margin:0;">
+            <input type="checkbox" name="roles" value="{{ r.id }}" style="width:auto;"
+              {{ 'checked' if member and r in member.roles }}> {{ r.name }}
+          </label>
+        {% endfor %}
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+        <input type="checkbox" name="is_admin" style="width:auto;" {{ 'checked' if member and member.is_admin }}>
+        Administrator
+      </label>
+      <div style="margin-top:16px;">
+        <button class="btn" type="submit">{{ 'Save changes' if member else 'Create member' }}</button>
+        <a class="btn secondary" href="{{ url_for('admin.home') }}">Cancel</a>
+      </div>
+    </form>
+    {% if not member %}
+    <p class="muted" style="font-size:12.5px;margin-top:12px;">
+      A one-time activation link will be generated (shown to you here; in production it would be emailed).
+    </p>
+    {% endif %}
+  </div></div>
+</main></div>
+{% endblock %}
