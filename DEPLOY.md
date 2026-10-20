@@ -23,7 +23,7 @@ Open a **Bash console** (Consoles tab → "Bash").
 
 **If the project is on GitHub:**
 ```bash
-git clone https://github.com/YOURUSER/click_n_glide.git ~/click_n_glide
+git clone https://github.com/granitechief88/hdsc.git ~/click_n_glide
 ```
 
 **Otherwise, upload a zip:** on your machine, zip the project *without* `.venv`
