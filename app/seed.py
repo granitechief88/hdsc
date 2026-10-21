@@ -1,12 +1,19 @@
-"""Seed a demo club so the app is usable immediately after setup."""
-from datetime import date, datetime, timedelta
+"""Seed the combined site: club, roles, day-board fields, and an admin account.
+
+Also provides import_website_users() to fold the old club-website sqlite
+database (its `users` table) into the unified Member table, preserving each
+user's existing password hash so their current password keeps working.
+"""
+import os
+import sqlite3
+
+from werkzeug.security import generate_password_hash
 
 from .extensions import db
-from .models import (
-    Club, Role, Member, FieldDef, Signup, Event, EventSignup, ForumPost, Message,
-)
+from .models import Club, Role, Member, FieldDef
 
-DEMO_PASSWORD = "glide1234"
+CLUB_NAME = "High Desert Soaring Club"
+CLUB_SLUG = "hdsc"
 
 ROLE_NAMES = [
     "Tug Driver", "Winch Driver", "Licensed pilot", "Dual student",
@@ -52,113 +59,118 @@ FIELD_DEFS = [
      "weekday,weekend", "", 3, 3, None, 1),
 ]
 
-# first, last, number, is_admin, [roles]
-MEMBERS = [
-    ("Alex", "Admin", "A0001", True, ["Instructor", "Licensed pilot"]),
-    ("Ivy", "Instructor", "I0010", False, ["Instructor", "Licensed pilot"]),
-    ("Ian", "Instructor", "I0011", False, ["Instructor", "Licensed pilot"]),
-    ("Sam", "Student", "S0020", False, ["Dual student"]),
-    ("Sue", "Student", "S0021", False, ["Dual student"]),
-    ("Sid", "Student", "S0022", False, ["Dual student"]),
-    ("Sarah", "Student", "S0023", False, ["Dual student"]),
-    ("Pete", "Pilot", "P0030", False, ["Licensed pilot", "Solo pilot"]),
-    ("Tom", "Towpilot", "T0040", False, ["Tug Driver", "Licensed pilot"]),
-    ("Wendy", "Winch", "W0050", False, ["Winch Driver"]),
-    ("Iris", "Intro", "N0060", False, ["Introductory pilot", "Licensed pilot"]),
-]
 
-
-def _next_weekday(d):
-    while d.weekday() >= 5:
-        d += timedelta(days=1)
-    return d
-
-
-def seed_demo():
-    club = Club(name="Soaring Demo Club", slug="demo")
+def _get_or_create_club():
+    club = Club.query.filter_by(slug=CLUB_SLUG).first()
+    if club:
+        return club
+    club = Club(name=CLUB_NAME, slug=CLUB_SLUG)
     db.session.add(club)
     db.session.flush()
+    return club
 
-    roles = {name: Role(club_id=club.id, name=name) for name in ROLE_NAMES}
-    db.session.add_all(roles.values())
+
+def _ensure_roles(club):
+    existing = {r.name: r for r in Role.query.filter_by(club_id=club.id).all()}
+    for name in ROLE_NAMES:
+        if name not in existing:
+            r = Role(club_id=club.id, name=name)
+            db.session.add(r)
+            existing[name] = r
     db.session.flush()
+    return existing
 
+
+def _ensure_fields(club):
+    have = {f.key for f in FieldDef.query.filter_by(club_id=club.id).all()}
     for key, label, kind, group, days, aroles, col, pos, maxs, offer in FIELD_DEFS:
+        if key in have:
+            continue
         db.session.add(FieldDef(
             club_id=club.id, key=key, label=label, kind=kind, group_key=group,
             day_types=days, allowed_roles=aroles, column=col, position=pos,
             max_slots=maxs, default_offer=offer,
         ))
+    db.session.flush()
 
-    members = {}
-    for first, last, num, is_admin, role_list in MEMBERS:
-        email = f"{first.lower()}@soardemo.club"
-        m = Member(
-            club_id=club.id, email=email, first_name=first, last_name=last,
-            membership_number=num, is_admin=is_admin, activated=True,
+
+def seed_site():
+    """Create the club, roles, day-board fields, and a single admin member."""
+    club = _get_or_create_club()
+    _ensure_roles(club)
+    _ensure_fields(club)
+
+    admin_email = os.environ.get("ADMIN_EMAIL", "gbaker@cadenceneuro.com")
+    admin_username = os.environ.get("ADMIN_USERNAME", "admin")
+    admin_password = os.environ.get("ADMIN_PASSWORD", "soaradmin")
+
+    admin = Member.query.filter_by(email=admin_email).first()
+    if admin is None:
+        admin = Member(
+            club_id=club.id,
+            email=admin_email,
+            username=admin_username,
+            first_name=os.environ.get("ADMIN_FIRST", "Club"),
+            last_name=os.environ.get("ADMIN_LAST", "Admin"),
+            is_admin=True,
+            activated=True,
         )
-        m.set_password(DEMO_PASSWORD)
-        m.roles = [roles[r] for r in role_list]
-        db.session.add(m)
-        members[first] = m
-    db.session.flush()
+        admin.set_password(admin_password)
+        db.session.add(admin)
+        print(f"  Created admin: {admin_email}  (password: {admin_password})")
+        print("  -> Log in and change this password from Settings.")
+    db.session.commit()
+    print(f"  Club ready: {club.name}")
 
-    # --- A sample weekday with a waiting list, to demonstrate the behaviour ---
-    d = _next_weekday(date.today())
-    base = datetime.utcnow()
-    seq = [0]
 
-    def add_signup(member, field_key, status="active", offered=0, comment=None):
-        seq[0] += 1
-        db.session.add(Signup(
-            club_id=club.id, day=d, field_key=field_key, member_id=member.id,
-            status=status, offered=offered, comment=comment,
-            created_at=base + timedelta(seconds=seq[0]),
-        ))
+def import_website_users(sqlite_path, email_domain="highdesertsoaring.org"):
+    """Fold the old club-website `users` table into the Member table.
 
-    # One instructor opens a single booked-flying slot...
-    add_signup(members["Ivy"], "booked_instructors", offered=1,
-               comment="Happy to take one student this morning")
-    # ...three students want it: one gets the slot, two wait.
-    add_signup(members["Sam"], "booked_students", status="active",
-               comment="Working on circuits")
-    add_signup(members["Sue"], "booked_students", status="waiting")
-    add_signup(members["Sid"], "booked_students", status="waiting")
-    # Ground crew & others.
-    add_signup(members["Tom"], "tug", comment="Available all day")
-    add_signup(members["Wendy"], "winch")
-    add_signup(members["Pete"], "fly_own", comment="Cross-country attempt if soarable")
+    Preserves password_hash and is_admin. The user named 'admin' is mapped to
+    ADMIN_EMAIL (default gbaker@cadenceneuro.com); others become
+    <username>@<email_domain>. Safe to re-run (updates existing rows).
+    """
+    if not os.path.exists(sqlite_path):
+        raise FileNotFoundError(sqlite_path)
 
-    # A forum post for the day.
-    db.session.add(ForumPost(
-        club_id=club.id, day=d, member_id=members["Alex"].id,
-        body="Forecast looks good — light NW, cloudbase ~3500ft. Briefing at 9:30.",
-        created_at=base,
-    ))
+    club = _get_or_create_club()
+    _ensure_roles(club)
+    _ensure_fields(club)
 
-    # An upcoming event.
-    ev = Event(
-        club_id=club.id, day=d + timedelta(days=7),
-        title="Winter maintenance day",
-        description="Help wanted cleaning and inspecting the club fleet. Lunch provided.",
-        capacity=12, created_by_id=members["Alex"].id,
-    )
-    db.session.add(ev)
-    db.session.flush()
-    db.session.add(EventSignup(event_id=ev.id, member_id=members["Pete"].id))
+    admin_email = os.environ.get("ADMIN_EMAIL", "gbaker@cadenceneuro.com")
 
-    # A welcome message in everyone's mailbox from the admin.
-    for m in members.values():
-        db.session.add(Message(
-            club_id=club.id, sender_id=members["Alex"].id, recipient_id=m.id,
-            audience="All members", subject="Welcome to the new scheduler",
-            body="Please sign up for the days you plan to fly. Add a comment so "
-                 "instructors and tuggies know your plans. Blue skies!",
-        ))
+    src = sqlite3.connect(sqlite_path)
+    src.row_factory = sqlite3.Row
+    rows = src.execute(
+        "SELECT username, password_hash, is_admin FROM users"
+    ).fetchall()
+    src.close()
+
+    count = 0
+    for row in rows:
+        username = row["username"]
+        is_admin = bool(row["is_admin"])
+        email = admin_email if username == "admin" else f"{username}@{email_domain}"
+
+        member = (
+            Member.query.filter_by(username=username).first()
+            or Member.query.filter_by(email=email).first()
+        )
+        if member is None:
+            member = Member(
+                club_id=club.id,
+                email=email,
+                username=username,
+                first_name=username.capitalize(),
+                last_name="",
+                activated=True,
+            )
+            db.session.add(member)
+        # Carry over the existing credentials/flags.
+        member.password_hash = row["password_hash"]
+        member.is_admin = is_admin
+        member.activated = True
+        count += 1
 
     db.session.commit()
-
-    print(f"  Club: {club.name}")
-    print(f"  Demo login password for all members: {DEMO_PASSWORD}")
-    print(f"  Admin login:  alex@soardemo.club")
-    print(f"  Sample day with waiting list: {d.isoformat()}")
+    return count

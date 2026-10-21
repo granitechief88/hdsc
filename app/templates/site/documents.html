@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+<section class="section-padded">
+  <div class="section-heading">
+    <span class="badge-soft mb-2">Members</span>
+    <h2>Club documents</h2>
+    <p>
+      Operations documents, training material, and other club resources.
+      These downloads are restricted to logged-in members.
+    </p>
+  </div>
+
+  {% if current_user.is_admin %}
+    <div class="mb-3">
+      <a href="{{ url_for('site.upload_document') }}" class="btn btn-primary">Upload document</a>
+    </div>
+  {% endif %}
+
+  {% if files %}
+    <div class="doc-grid">
+      {% for f in files %}
+        <article class="doc-card">
+          <div>
+            <div class="doc-title">{{ f }}</div>
+            <div class="doc-meta">Member download</div>
+          </div>
+          <div class="mt-2 d-flex gap-2">
+            <a href="{{ url_for('site.download_document', filename=f) }}" class="btn btn-sm btn-outline-primary">Download</a>
+            {% if current_user.is_admin %}
+              <form method="post" action="{{ url_for('site.delete_document', filename=f) }}"
+                    onsubmit="return confirm('Delete {{ f }}?');">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No documents have been uploaded yet.</p>
+  {% endif %}
+</section>
+</div>
+{% endblock %}

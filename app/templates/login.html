@@ -1,25 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Log in · Soar Scheduler{% endblock %}
+{% block title %}Member Login · High Desert Soaring Club{% endblock %}
 {% block body %}
-<div class="auth-wrap">
-  <div class="panel">
-    <div class="phead">Log in to your club</div>
-    <div class="pbody">
-      <form method="post">
-        <label>Email</label>
-        <input type="email" name="email" placeholder="you@example.com" autofocus required>
-        <label>Password</label>
-        <input type="password" name="password" placeholder="Your password" required>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-          <input type="checkbox" name="stay" style="width:auto;" checked> Stay connected
-        </label>
-        <div style="margin-top:16px;"><button class="btn" type="submit">Log in</button></div>
-      </form>
-    </div>
+<div class="container">
+<section class="section-padded" style="max-width: 480px; margin-inline: auto;">
+  <div class="card-soft">
+    <h1 class="h4 mb-3">Member login</h1>
+    <p class="text-muted mb-4">
+      Log in with your email to reach the scheduling board, club documents, and member tools.
+    </p>
+    <form method="post" autocomplete="off">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input id="email" name="email" type="email" class="form-control" autofocus required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input id="password" name="password" type="password" class="form-control" required>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="stay" id="stay" checked>
+        <label class="form-check-label" for="stay">Stay logged in on this device</label>
+      </div>
+      <button class="btn btn-primary w-100" type="submit">Log in</button>
+    </form>
   </div>
-  <p class="muted" style="text-align:center;font-size:13px;">
-    Demo logins (password <b>glide1234</b>): alex@soardemo.club (admin),
-    ivy@soardemo.club (instructor), sam@soardemo.club (student).
-  </p>
+</section>
 </div>
 {% endblock %}

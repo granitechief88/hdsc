@@ -1,12 +1,18 @@
-# Soar Scheduler
+# High Desert Soaring Club — website + scheduler
 
-A gliding-club day-board scheduler inspired by [Click n' Glide](https://clicknglide.com).
+The club's public website and its day-board flight scheduler combined into **one
+Flask app with a single user database**. Public visitors see the club site
+(Home, About, Fleet, Visit & Contact); logged-in members additionally get the
+**Scheduling** board, **Documents**, **Mailbox**, and (for admins) the Admin area.
+
 Members sign up, ahead of each flying day, for the role they'll fill (instructor,
 student, tug/winch driver, solo, etc.). Instructors open a chosen number of student
 slots; overflow students queue on a waiting list and are **promoted automatically**
 as capacity opens up.
 
-Built with Flask + SQLAlchemy + SQLite, server-rendered (no build step).
+Built with Flask + SQLAlchemy + SQLite + Flask-Login, server-rendered (Bootstrap
+front end, no build step). Login is by **email**; there is one `Member` record per
+person used for both the site and the scheduler.
 
 ## Quick start
 
@@ -14,30 +20,39 @@ Built with Flask + SQLAlchemy + SQLite, server-rendered (no build step).
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# Create the database and load a demo club
-.venv/bin/flask --app "app:create_app" init-demo
+# Create the database and seed club, roles, board fields, and an admin account
+.venv/bin/flask --app "app:create_app" init-site
 
 # Run
 .venv/bin/python run.py
 # open http://127.0.0.1:5000
 ```
 
-### Demo logins (password `glide1234` for all)
+### Default admin login
 
-| Email                 | Role                         |
-|-----------------------|------------------------------|
-| `alex@soardemo.club`  | Administrator + instructor   |
-| `ivy@soardemo.club`   | Instructor                   |
-| `sam@soardemo.club`   | Dual student                 |
-| `tom@soardemo.club`   | Tug driver                   |
-| `wendy@soardemo.club` | Winch driver                 |
+| Email                       | Password    | Notes                               |
+|-----------------------------|-------------|-------------------------------------|
+| `gbaker@cadenceneuro.com`   | `soaradmin` | Change it from **Settings** after first login |
 
-The board opens on **today**. Navigate to **Mon 19 Oct 2026** (or the next weekday
-after you seed) to see a pre-built example with a full student slot and a waiting list.
-Weekends show *Full Day Group* fields instead of *Booked-Flying*.
+Override at seed time with env vars `ADMIN_EMAIL`, `ADMIN_PASSWORD`,
+`ADMIN_FIRST`, `ADMIN_LAST`. Add real members from **Admin → Add member**.
+
+### Importing the old club-website database
+
+To fold users from the previous standalone website into the combined app
+(preserving each person's existing password hash and admin flag):
+
+```bash
+.venv/bin/flask --app "app:create_app" import-club-db /path/to/soaringclub.db
+```
 
 ## What it does
 
+### Club website (public)
+- **Home / About / Fleet / Visit & Contact** — the club's Bootstrap site.
+- **Documents** (members only) — admins upload PDFs/docs/images; members download.
+
+### Scheduler (members only — the "Scheduling" tab)
 - **Day board** — per-day sign-up grid in three columns, different field sets for
   weekdays vs weekends. You only see sign-ups your roles permit.
 - **Instructor-driven capacity** — an instructor chooses how many students to take;
@@ -62,7 +77,8 @@ Weekends show *Full Day Group* fields instead of *Booked-Flying*.
 
 ```
 app/
-  __init__.py        app factory, blueprint registration, `init-demo` CLI command
+  __init__.py        app factory, blueprint registration, `init-site`/`import-club-db` CLI
+  views_site.py      public club pages + members-only Documents
   extensions.py      db + login manager singletons
   models.py          Club, Member, Role, FieldDef, Signup, Event, Message, ...
   scheduling.py      capacity, waiting-list rebalance, email stub + notifications

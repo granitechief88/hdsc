@@ -1,39 +1,93 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <title>{% block title %}{{ title or "High Desert Soaring Club" }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Soar Scheduler{% endblock %}</title>
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header class="topbar">
-    <span class="brand">Soar <span class="glide">Scheduler</span></span>
-    {% if current_user.is_authenticated %}
-    <nav>
-      <a href="{{ url_for('board.day') }}" class="{{ 'active' if request.blueprint == 'board' }}">Day board</a>
-      <a href="{{ url_for('events.list_events') }}" class="{{ 'active' if request.blueprint == 'events' }}">Events</a>
-      <a href="{{ url_for('messages.inbox') }}" class="{{ 'active' if request.blueprint == 'messages' }}">Mailbox{% if unread_messages %}<span class="badge">{{ unread_messages }}</span>{% endif %}</a>
-      {% if current_user.is_admin %}
-      <a href="{{ url_for('admin.home') }}" class="{{ 'active' if request.blueprint == 'admin' }}">Admin</a>
-      {% endif %}
-      <a href="{{ url_for('auth.settings') }}">{{ current_user.first_name }}</a>
-      <a href="{{ url_for('auth.logout') }}">Log out</a>
-    </nav>
-    {% endif %}
-  </header>
-
-  <div class="content">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div style="max-width:1280px;margin:10px auto 0;padding:0 18px;">
-        {% for cat, msg in messages %}
-          <div class="flash {{ cat }}">{{ msg }}</div>
-        {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    {% block body %}{% endblock %}
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('site.index') }}">High Desert Soaring</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'site.about' %}active{% endif %}" href="{{ url_for('site.about') }}">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'site.fleet' %}active{% endif %}" href="{{ url_for('site.fleet') }}">Fleet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'site.contact' %}active{% endif %}" href="{{ url_for('site.contact') }}">Visit &amp; Contact</a>
+        </li>
+        {% if current_user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.blueprint == 'board' %}active{% endif %}" href="{{ url_for('board.day') }}">Scheduling</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.blueprint == 'events' %}active{% endif %}" href="{{ url_for('events.list_events') }}">Events</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint in ['site.documents','site.upload_document'] %}active{% endif %}" href="{{ url_for('site.documents') }}">Documents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}" href="{{ url_for('messages.inbox') }}">
+              Mailbox{% if unread_messages %} <span class="badge bg-danger rounded-pill">{{ unread_messages }}</span>{% endif %}
+            </a>
+          </li>
+          {% if current_user.is_admin %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.blueprint == 'admin' %}active{% endif %}" href="{{ url_for('admin.home') }}">Admin</a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'auth.settings' %}active{% endif %}" href="{{ url_for('auth.settings') }}">{{ current_user.first_name }}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">Log out</a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}">Member Login</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
   </div>
+</nav>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container mt-3">
+        {% for category, message in messages %}
+          {% set cat = 'danger' if category == 'error' else category %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block body %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+    <span>&copy; High Desert Soaring Club, Bend Oregon.</span>
+    <span class="text-muted">Demonstration flights &amp; soaring from Bend Municipal Airport (KBDN).</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

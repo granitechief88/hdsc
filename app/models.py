@@ -35,6 +35,9 @@ class Member(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     club_id = db.Column(db.Integer, db.ForeignKey("club.id"), nullable=False)
     email = db.Column(db.String(200), unique=True, nullable=False)
+    # Optional legacy handle carried over from the old club website (login is
+    # by email; username is kept for reference / display).
+    username = db.Column(db.String(80), unique=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     membership_number = db.Column(db.String(40))

@@ -118,7 +118,17 @@ rm -f instance/soar.db
 rm -f instance/uploads/*
 # then click Reload on the Web tab — first visit re-seeds
 ```
-Or, equivalently: `.venv/bin/flask --app "app:create_app" init-demo`
+Or, equivalently: `.venv/bin/flask --app "app:create_app" init-site`
+
+> **Upgrading an existing deployment to the combined site:** after `git pull`,
+> the database schema has changed, so reset it once:
+> ```bash
+> cd ~/hdsc && rm -f instance/soar.db && .venv/bin/flask --app "app:create_app" init-site
+> ```
+> This seeds the club, roles, board fields, and a single admin
+> (`gbaker@cadenceneuro.com` / `soaradmin` by default — change it after first login).
+> To instead carry over users from the old club-website database, run
+> `.venv/bin/flask --app "app:create_app" import-club-db <path-to-soaringclub.db>`.
 
 **Optional — daily reminder emails.** The free tier includes one daily scheduled
 task. **Tasks tab → add a daily task** with this command:

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+<section class="hero mb-4">
+  <div class="row align-items-center">
+    <div class="col-lg-6">
+      <div class="hero-content">
+        <div class="hero-eyebrow">High Desert Soaring Club · Bend, Oregon</div>
+        <h1>Silent flight above Central Oregon&apos;s high desert.</h1>
+        <p class="hero-lead">
+          High Desert Soaring Club is a volunteer-run club based at Bend Municipal Airport (KBDN),
+          offering demonstration flights and glider training in the clear, dry air of Central Oregon.
+        </p>
+        <div class="hero-cta-group">
+          <a href="{{ url_for('site.contact') }}" class="hero-cta-primary">Request a demonstration flight</a>
+          <a href="{{ url_for('site.about') }}" class="hero-cta-secondary">Learn about membership</a>
+        </div>
+        <div class="hero-meta">
+          <span>◎ Demonstration flights most Saturdays (weather permitting)</span>
+          <span>◎ Operations from Bend Municipal Airport (KBDN)</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 d-none d-lg-block">
+      <div class="hero-visual">
+        <img src="{{ url_for('static', filename='img/asw27-glider.png') }}"
+          alt="Glider soaring above Central Oregon high desert"
+          class="img-fluid hero-photo glider-outline">
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if current_user.is_authenticated %}
+<section class="section-padded">
+  <div class="card-soft">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <h2 class="h5 mb-1">Welcome back, {{ current_user.first_name }}.</h2>
+        <p class="text-muted mb-0">Jump to the day board to sign up for flying, or browse club documents.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('board.day') }}" class="btn btn-primary">Open scheduling</a>
+        <a href="{{ url_for('site.documents') }}" class="btn btn-outline-primary">Documents</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section-padded">
+  <div class="section-heading">
+    <span class="badge-soft mb-2">For visitors &amp; new pilots</span>
+    <h2>Ways to get involved at High Desert Soaring Club</h2>
+    <p>
+      Whether you&apos;re curious about gliding, working toward a pilot certificate,
+      or already an experienced soaring pilot, there&apos;s a place for you in our club.
+    </p>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <h3>Demonstration flights</h3>
+      <p>Take a demonstration ride in our ASK-21 two-seat glider with one of our experienced pilots.
+         Flights typically operate on Saturdays, weather permitting.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Learn to soar</h3>
+      <p>Continue from demonstration flights into structured training toward your glider rating.
+         Benefit from instruction, ground briefings, and guidance from club members.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Join the club</h3>
+      <p>Become part of a friendly soaring community based at Bend Municipal Airport.
+         Help with operations, share the tow plane, and enjoy the high-desert soaring environment.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section-padded">
+  <div class="section-heading">
+    <span class="badge-soft mb-2">Our fleet</span>
+    <h2>Gliders and tow plane</h2>
+    <p>High Desert Soaring Club currently operates a two-seat ASK-21 for demonstration and training flights,
+       a single-seat Grob 102 Astir CS, and a Pawnee tow plane.</p>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <h3>Schleicher ASK-21 (two-seat)</h3>
+      <p>Our primary two-seat glider for demonstration flights and training.
+         Offers excellent visibility and predictable handling for new pilots.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Grob 102 Astir CS (single-seat)</h3>
+      <p>A single-seat performance glider for solo soaring once members are qualified.
+         Ideal for local soaring and exploring Central Oregon lift.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Pawnee tow plane</h3>
+      <p>Our Pawnee tow plane provides reliable aerotows to soaring altitude,
+         launching club flights from Bend Municipal Airport.</p>
+    </article>
+  </div>
+</section>
+</div>
+{% endblock %}
